@@ -37,10 +37,7 @@ class Listener : NotificationListenerService() {
         if (title.isEmpty() && body.isEmpty()) return
         if (prefs.skipEmpty && body.isEmpty()) return
 
-        if (prefs.ignoreBot &&
-            pkg.contains("telegram", true) &&
-            title.contains(Prefs.BOT_LABEL, true)
-        ) return
+        if (prefs.ignoreBot && isTelegram(pkg) && own(title, body)) return
 
         val now = System.currentTimeMillis()
         val key = (title + "|" + body).hashCode().toString()
@@ -52,11 +49,19 @@ class Listener : NotificationListenerService() {
             seen[key] = now
         }
 
-        val text = "[" + label(pkg) + "] " + (if (title.isEmpty()) "" else title + "\n") + body
+        val text = MARK + "[" + label(pkg) + "] " + (if (title.isEmpty()) "" else title + "\n") + body
         Queue(ctx).add(text.trim())
         Sender.kick(ctx)
         prefs.last = Stamps.now() + " · queued"
     }
+
+    private fun own(title: String, body: String): Boolean =
+        title.contains(Prefs.BOT_LABEL, true) ||
+            body.startsWith(MARK) ||
+            body.contains(MARK)
+
+    private fun isTelegram(pkg: String): Boolean =
+        pkg.contains("telegram", true) || pkg.contains("challegram", true)
 
     private fun body(extras: Bundle): String {
         extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.trim()
@@ -73,5 +78,9 @@ class Listener : NotificationListenerService() {
         packageManager.getApplicationLabel(info).toString()
     } catch (t: Throwable) {
         pkg
+    }
+
+    companion object {
+        const val MARK = "\u25B8 "
     }
 }
