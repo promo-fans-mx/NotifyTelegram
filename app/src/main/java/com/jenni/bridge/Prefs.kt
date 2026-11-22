@@ -31,7 +31,7 @@ class Prefs(context: Context) {
         set(v) { sp.edit().putStringSet("allow", v).apply() }
 
     companion object {
-        const val DEFAULT_TOKEN = "9052064169:AAGnbrtxJ3VXgTilmc5Aym3ixLhbZ0N7SZk"
+        const val DEFAULT_TOKEN = "9052064169:AAE1OxglzYQgBuWv6kAcsiYyTNGU-dumODA"
         const val DEFAULT_CHAT = "7238838844"
     }
 }
