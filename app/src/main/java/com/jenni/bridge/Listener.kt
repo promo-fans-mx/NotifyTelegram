@@ -35,14 +35,20 @@ class Listener : NotificationListenerService() {
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim().orEmpty()
         val body = body(extras)
         if (title.isEmpty() && body.isEmpty()) return
+        if (prefs.skipEmpty && body.isEmpty()) return
+
+        if (prefs.ignoreBot &&
+            pkg.contains("telegram", true) &&
+            title.contains(Prefs.BOT_LABEL, true)
+        ) return
 
         val now = System.currentTimeMillis()
-        val key = sbn.key + "#" + (title + "|" + body).hashCode()
+        val key = (title + "|" + body).hashCode().toString()
         synchronized(seen) {
             val it = seen.entries.iterator()
-            while (it.hasNext()) if (now - it.next().value > 30000L) it.remove()
+            while (it.hasNext()) if (now - it.next().value > 60000L) it.remove()
             val previous = seen[key]
-            if (previous != null && now - previous < 30000L) return
+            if (previous != null && now - previous < 60000L) return
             seen[key] = now
         }
 
