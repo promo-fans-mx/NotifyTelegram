@@ -1,0 +1,23 @@
+name: diag
+on: [workflow_dispatch]
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Dump config
+        run: |
+          echo "=== wrapper ==="
+          cat gradle/wrapper/gradle-wrapper.properties || echo none
+          echo "=== gradle.properties ==="
+          cat gradle.properties || echo none
+          echo "=== agp / plugins ==="
+          grep -n "com.android" build.gradle.kts app/build.gradle.kts settings.gradle.kts gradle/libs.versions.toml 2>/dev/null || echo none
+          echo "=== sdk + ids ==="
+          grep -n "minSdk\|compileSdk\|targetSdk\|namespace\|applicationId\|viewBinding\|buildConfig" app/build.gradle.kts || echo none
+          echo "=== signing ==="
+          grep -n "signingConfigs" -A 20 app/build.gradle.kts || echo none
+          echo "=== keystore dir ==="
+          ls -la keystore 2>/dev/null || echo none
