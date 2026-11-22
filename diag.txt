@@ -1,0 +1,73 @@
+== wrapper ==
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-9.7.1-bin.zip
+networkTimeout=10000
+retries=0
+retryBackOffMs=500
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+== gradle.properties ==
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+org.gradle.parallel=true
+org.gradle.caching=true
+
+android.useAndroidX=true
+android.nonTransitiveRClass=true
+
+kotlin.code.style=official
+== agp ==
+build.gradle.kts:2:    id("com.android.application") version "9.4.0" apply false
+app/build.gradle.kts:4:    id("com.android.application")
+none
+== sdk ==
+19:    namespace = "hr.sting.notifytelegram"
+20:    compileSdk = 36
+24:        minSdk = 26
+25:        targetSdk = 36
+== signing ==
+30:    signingConfigs {
+31-        create("release") {
+32-            if (keystorePropertiesFile.exists()) {
+33-                storeFile = file(keystoreProperties.getProperty("storeFile"))
+34-                storePassword = keystoreProperties.getProperty("storePassword")
+35-                keyAlias = keystoreProperties.getProperty("keyAlias")
+36-                keyPassword = keystoreProperties.getProperty("keyPassword")
+37-            }
+38-        }
+39-    }
+40-
+41-    buildTypes {
+42-        release {
+43-            isMinifyEnabled = false
+44-            proguardFiles(
+45-                getDefaultProguardFile("proguard-android-optimize.txt"),
+46-                "proguard-rules.pro"
+47-            )
+48-            if (keystorePropertiesFile.exists()) {
+49:                signingConfig = signingConfigs.getByName("release")
+50-            }
+51-        }
+52-    }
+53-
+54-    compileOptions {
+55-        sourceCompatibility = JavaVersion.VERSION_17
+56-        targetCompatibility = JavaVersion.VERSION_17
+57-    }
+58-
+59-    packaging {
+60-        resources.excludes += setOf("META-INF/*.kotlin_module")
+61-    }
+62-}
+63-
+64-// Publish as NotifyTelegram-<version>.apk, never the default app-release.apk.
+65-androidComponents {
+66-    onVariants(selector().all()) { variant ->
+67-        variant.outputs.forEach { output ->
+68-            output.outputFileName.set("NotifyTelegram-${output.versionName.get()}.apk")
+69-        }
+== keystore ==
+none
+== build.log tail ==
+none
