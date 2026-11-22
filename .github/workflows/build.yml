@@ -17,30 +17,56 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
-      - name: Versions
-        run: |
-          cat gradle/wrapper/gradle-wrapper.properties || true
-          grep -rn "com.android" build.gradle.kts app/build.gradle.kts settings.gradle.kts 2>/dev/null || true
-          grep -rn "minSdk\|compileSdk" app/build.gradle.kts 2>/dev/null || true
-
       - name: Make wrapper executable
         run: chmod +x gradlew
 
       - name: Build
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Write diag.txt
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          {
+            echo "== wrapper =="
+            cat gradle/wrapper/gradle-wrapper.properties || echo none
+            echo "== gradle.properties =="
+            cat gradle.properties || echo none
+            echo "== agp =="
+            grep -rn "com.android" build.gradle.kts app/build.gradle.kts settings.gradle.kts gradle/libs.versions.toml 2>/dev/null || echo none
+            echo "== sdk =="
+            grep -n "minSdk\|compileSdk\|targetSdk\|namespace\|viewBinding\|buildConfig" app/build.gradle.kts || echo none
+            echo "== signing =="
+            grep -n "signingConfigs" -A 20 app/build.gradle.kts || echo none
+            echo "== keystore =="
+            ls -la keystore 2>/dev/null || echo none
+            echo "== build.log tail =="
+            tail -n 120 build.log 2>/dev/null || echo none
+          } > diag.txt
+          git add diag.txt
+          git commit -m "diag [skip ci]" || true
+          git push || true
 
       - name: Package
+        if: steps.build.outcome == 'success'
         run: |
           mkdir -p dist
           cp app/build/outputs/apk/debug/*.apk "dist/Update-v${{ github.run_number }}.apk"
           cd dist && sha256sum *.apk | tee SHA256.txt
 
       - uses: actions/upload-artifact@v4
+        if: steps.build.outcome == 'success'
         with:
           name: apk
           path: dist/*
 
       - name: Release
+        if: steps.build.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
