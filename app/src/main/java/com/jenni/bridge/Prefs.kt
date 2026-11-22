@@ -22,6 +22,14 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("enabled", false)
         set(v) { sp.edit().putBoolean("enabled", v).apply() }
 
+    var skipEmpty: Boolean
+        get() = sp.getBoolean("skip_empty", true)
+        set(v) { sp.edit().putBoolean("skip_empty", v).apply() }
+
+    var ignoreBot: Boolean
+        get() = sp.getBoolean("ignore_bot", true)
+        set(v) { sp.edit().putBoolean("ignore_bot", v).apply() }
+
     var last: String
         get() = sp.getString("last", "") ?: ""
         set(v) { sp.edit().putString("last", v).apply() }
@@ -33,6 +41,7 @@ class Prefs(context: Context) {
     companion object {
         const val DEFAULT_TOKEN = "9052064169:AAGgumq_PYNktDxwduYkxIa8zEyhCyKK3qM"
         const val DEFAULT_CHAT = "7238838844"
+        const val BOT_LABEL = "Reproductor Jenni"
     }
 }
 
