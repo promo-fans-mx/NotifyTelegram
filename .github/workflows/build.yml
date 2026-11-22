@@ -13,19 +13,16 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
-      - uses: android-actions/setup-android@v3
-
-      - name: Make wrapper executable
-        run: chmod +x gradlew
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+          validate-wrappers: false
 
       - name: Build
         id: build
-        continue-on-error: true
-        run: |
-          set -o pipefail
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+        run: gradle :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
 
       - name: Write diag.txt
         if: always()
@@ -33,7 +30,11 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@users.noreply.github.com"
           {
-            echo "== wrapper =="
+            echo "== env =="
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            echo "== wrapper dir =="
+            ls -la gradle/wrapper || echo none
+            echo "== wrapper props =="
             cat gradle/wrapper/gradle-wrapper.properties || echo none
             echo "== gradle.properties =="
             cat gradle.properties || echo none
@@ -45,8 +46,10 @@ jobs:
             grep -n "signingConfigs" -A 20 app/build.gradle.kts || echo none
             echo "== keystore =="
             ls -la keystore 2>/dev/null || echo none
+            echo "== sources =="
+            find app/src/main/java -name "*.kt" | sort || echo none
             echo "== build.log tail =="
-            tail -n 120 build.log 2>/dev/null || echo none
+            tail -n 150 build.log 2>/dev/null || echo none
           } > diag.txt
           git add diag.txt
           git commit -m "diag [skip ci]" || true
